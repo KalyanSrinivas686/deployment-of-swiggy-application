@@ -1,23 +1,24 @@
 trigger:
   branches:
     include:
-      - main # Trigger the pipeline on changes to the main branch
+      - main # Trigger on changes to the main branch
 
 pool:
   vmImage: 'ubuntu-latest' # Use the latest Ubuntu agent
 
 variables:
-  buildConfiguration: 'Release'
+  buildConfiguration: 'Release' # Define the build configuration
+  artifactPath: '$(System.DefaultWorkingDirectory)/build-output' # Define where artifacts will be stored
 
 steps:
 # Step 1: Checkout the code
 - task: Checkout@1
-  displayName: 'Checkout code'
+  displayName: 'Checkout Code'
 
-# Step 2: Set up the required environment
+# Step 2: Set up the environment (Python example)
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: '3.x' # Adjust based on the required Python version
+    versionSpec: '3.x' # Use Python version 3.x
     addToPath: true
   displayName: 'Set up Python environment'
 
@@ -35,11 +36,13 @@ steps:
 # Step 5: Build the application
 - script: |
     python setup.py build
+    mkdir -p $(artifactPath) # Ensure the artifact directory exists
+    cp -R dist/* $(artifactPath) # Copy build files to artifact directory
   displayName: 'Build the application'
 
-# Step 6: Package artifacts
+# Step 6: Publish build artifacts
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(System.DefaultWorkingDirectory)/dist' # Adjust this path if needed
+    targetPath: '$(artifactPath)' # Use the artifact path defined in variables
     artifact: 'swiggy-app-artifacts'
-  displayName: 'Publish build artifacts'
+  displayName: 'Publish Build Artifacts'
