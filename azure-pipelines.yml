@@ -1,0 +1,45 @@
+trigger:
+  branches:
+    include:
+      - main # Trigger the pipeline on changes to the main branch
+
+pool:
+  vmImage: 'ubuntu-latest' # Use the latest Ubuntu agent
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+# Step 1: Checkout the code
+- task: Checkout@1
+  displayName: 'Checkout code'
+
+# Step 2: Set up the required environment
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x' # Adjust based on the required Python version
+    addToPath: true
+  displayName: 'Set up Python environment'
+
+# Step 3: Install dependencies
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Install dependencies'
+
+# Step 4: Run tests
+- script: |
+    pytest tests/
+  displayName: 'Run unit tests'
+
+# Step 5: Build the application
+- script: |
+    python setup.py build
+  displayName: 'Build the application'
+
+# Step 6: Package artifacts
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/dist' # Adjust this path if needed
+    artifact: 'swiggy-app-artifacts'
+  displayName: 'Publish build artifacts'
